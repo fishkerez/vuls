@@ -657,7 +657,8 @@ func (l *base) scanLibraries() (err error) {
 			if !r.isSuccess() {
 				return xerrors.Errorf("Failed to get target file permission: %s, filepath: %s", r, path)
 			}
-			permStr := fmt.Sprintf("0%s", strings.ReplaceAll(r.Stdout, "\n", ""))
+			permStr := fmt.Sprintf("%s", strings.ReplaceAll(r.Stdout, "\n", ""))
+			permStr = fmt.Sprintf("0%s", strings.ReplaceAll(permStr, "\r", ""))
 			perm, err := strconv.ParseUint(permStr, 8, 32)
 			if err != nil {
 				return xerrors.Errorf("Failed to parse permission string. err: %w, permission string: %s", err, permStr)

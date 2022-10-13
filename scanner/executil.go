@@ -233,6 +233,7 @@ func sshExecExternal(c config.ServerInfo, cmd string, sudo bool) (result execRes
 	cmd = fmt.Sprintf("stty cols 1000; %s", cmd)
 
 	args = append(args, cmd)
+
 	execCmd := ex.Command(sshBinaryPath, args...)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
