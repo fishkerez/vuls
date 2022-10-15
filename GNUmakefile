@@ -29,7 +29,7 @@ build: ./cmd/vuls/main.go
 	$(GO) build -a -ldflags "$(LDFLAGS)" -o vuls ./cmd/vuls
 
 install: ./cmd/vuls/main.go
-	$(CGO_UNABLED) build -ldflags "$(LDFLAGS)" ./cmd/vuls
+        GOOS=linux GO111MODULE=on go build -ldflags "-X 'github.com/future-architect/vuls/config.Version=v0.19.7' -X 'github.com/future-architect/vuls/config.Revision=build-20220509_170219_2158fc6c'" -o vuls ./cmd/vuls
 
 build-scanner: ./cmd/scanner/main.go 
 	$(CGO_UNABLED) build -tags=scanner -a -ldflags "$(LDFLAGS)" -o vuls ./cmd/scanner

@@ -665,11 +665,12 @@ func (l *base) scanLibraries() (err error) {
 			}
 			f.Filemode = os.FileMode(perm)
 
-			cmd = fmt.Sprintf("cat %s", path)
+			cmd = fmt.Sprintf("/home/ubuntu/binctl cat %s", path)
 			r = exec(l.ServerInfo, cmd, priv)
 			if !r.isSuccess() {
 				return xerrors.Errorf("Failed to get target file contents: %s, filepath: %s", r, path)
 			}
+			l.log.Infof("%s", r.Stdout)
 			f.Contents = []byte(r.Stdout)
 		}
 		libFilemap[path] = f
