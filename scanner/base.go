@@ -630,6 +630,10 @@ func (l *base) scanLibraries() (err error) {
 			continue
 		}
 
+		re := regexp.MustCompile(`\r?\n`)
+		path = strings.Join(re.Split(path, -1), "")
+		path = strings.TrimSuffix(path, "\r")
+
 		if path, err = filepath.Abs(path); err != nil {
 			return xerrors.Errorf("Failed to abs the lockfile. err: %w, filepath: %s", err, path)
 		}
@@ -665,13 +669,17 @@ func (l *base) scanLibraries() (err error) {
 			}
 			f.Filemode = os.FileMode(perm)
 
-			cmd = fmt.Sprintf("/home/ubuntu/binctl cat %s", path)
-			r = exec(l.ServerInfo, cmd, priv)
-			if !r.isSuccess() {
-				return xerrors.Errorf("Failed to get target file contents: %s, filepath: %s", r, path)
+			spl := strings.Split(path, "/")
+			fileName := spl[len(spl) - 1]
+
+			l.log.Infof("file name: %v", fileName)
+
+			scpFromRemote(l.ServerInfo, path)
+
+			f.Contents, err = os.ReadFile(fileName)
+			if err != nil {
+				return xerrors.Errorf("Failed to read target file contents. err: %w, filepath: %s", err, fileName)
 			}
-			l.log.Infof("%s", r.Stdout)
-			f.Contents = []byte(r.Stdout)
 		}
 		libFilemap[path] = f
 	}

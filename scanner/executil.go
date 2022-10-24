@@ -2,13 +2,19 @@ package scanner
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"os"
 	ex "os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
+	scp "github.com/bramvdbogaerde/go-scp"
+	"github.com/bramvdbogaerde/go-scp/auth"
+	"golang.org/x/crypto/ssh"
+	//"golang.org/x/crypto/ssh"
 	"golang.org/x/xerrors"
 
 	"github.com/future-architect/vuls/config"
@@ -178,6 +184,46 @@ func localExec(c config.ServerInfo, cmdstr string, sudo bool) (result execResult
 	result.Stderr = stderrBuf.String()
 	result.Cmd = strings.Replace(cmdstr, "\n", "", -1)
 	return
+}
+
+func scpFromRemote(c config.ServerInfo, remotePath string) {
+	// Use SSH key authentication from the auth package
+	// we ignore the host key in this example, please change this if you use this library
+	clientConfig, _ := auth.PrivateKey(c.User, c.KeyPath, ssh.InsecureIgnoreHostKey())
+
+	spl := strings.Split(remotePath, "/")
+	fileName := spl[len(spl) - 1]
+	// For other authentication methods see ssh.ClientConfig and ssh.AuthMethod
+
+	// Create a new SCP client
+	client := scp.NewClient(c.Host + ":" + c.Port, &clientConfig)
+
+	// Connect to the remote server
+	err := client.Connect()
+	if err != nil {
+		fmt.Println("Couldn't establish a connection to the remote server ", err)
+		return
+	}
+
+	// Open a file
+	f, _ := os.Create(fileName)
+	//f, _ := os.Open(fileName)
+
+	// Close client connection after the file has been copied
+	defer client.Close()
+
+	// Close the file after it has been copied
+	defer f.Close()
+
+	// Finaly, copy the file over
+	// Usage: CopyFromFile(context, file, remotePath, permission)
+
+	// the context can be adjusted to provide time-outs or inherit from other contexts if this is embedded in a larger application.
+	err = client.CopyFromRemote(context.Background(), f, remotePath)
+
+	if err != nil {
+		fmt.Println("Error while copying file ", err)
+	}
 }
 
 func sshExecExternal(c config.ServerInfo, cmd string, sudo bool) (result execResult) {
